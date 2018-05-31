@@ -7,7 +7,7 @@ enum iexPrefix = "https://api.iextrading.com/1.0/";
 enum EndpointType : string {
     Book = "book",
     Chart = "chart",
-    HistoricalPrices = "chart",
+    HistoricalPrices = EndpointType.Chart,
     Company = "company",
     DelayedQuote = "delayed-quote",
     Dividends = "dividends",
