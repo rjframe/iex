@@ -1,0 +1,13 @@
+{
+	"name": "iex",
+	"authors": [
+		"Ryan Frame"
+	],
+	"dependencies": {
+		"requests": "~>0.8.0",
+        "vibe-d:data": "~>0.8.4-rc.1"
+	},
+	"description": "Wrapper for the IEX trading API",
+	"copyright": "Copyright © 2018 Ryan Frame",
+	"license": "MIT"
+}

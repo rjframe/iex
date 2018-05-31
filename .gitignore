@@ -1,0 +1,14 @@
+.dub
+docs.json
+__dummy.html
+docs/
+iex.so
+iex.dylib
+iex.dll
+iex.a
+iex.lib
+iex-test-*
+*.exe
+*.o
+*.obj
+*.lst
