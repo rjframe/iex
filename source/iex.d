@@ -220,6 +220,9 @@ unittest {
 
 @("chart() builds an endpoint for custom dates")
 unittest {
+    auto stock = Stock("AAPL").chart("20180531");
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/chart/date/20180531",
+            stock.toURL());
 }
 
 @("chart() builds an endpoint for multiple stock symbols")
@@ -242,10 +245,6 @@ Stock chart(Stock stock, string range,
     import std.string : isNumeric;
 
     string[string] params;
-    if (! (hasEnumMember!ChartRange(range)
-            || (range.isNumeric && range.length == 8))) {
-        throw new Exception("Invalid range for chart: " ~ range);
-    }
 
     if (resetAtMidnight) params["chartReset"] = "true";
     if (simplify) params["chartSimplify"] = "true";
@@ -253,7 +252,13 @@ Stock chart(Stock stock, string range,
     if (changeFromClose) params["changeFromClose"] = "true";
     if (last > 0) params["chartLast"] = last.text;
 
-    stock.addQueryType(EndpointType.Chart, params, "/" ~ range);
+    if (range.isNumeric && range.length == 8)
+        stock.addQueryType(EndpointType.Chart, params, "/date/" ~ range);
+    else if (hasEnumMember!ChartRange(range))
+        stock.addQueryType(EndpointType.Chart, params, "/" ~ range);
+    else
+        throw new Exception("Invalid range for chart: " ~ range);
+
     return stock;
 }
 
