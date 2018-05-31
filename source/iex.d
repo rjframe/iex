@@ -59,12 +59,21 @@ struct Stock {
             for (int i = 1; i < symbols.length; ++i) {
                 queryString ~= "," ~ symbols[i];
             }
+
+            queryString ~= "&types=";
+            foreach (type, params; paramSet) {
+                 queryString ~= type ~ ",";
+            }
+            queryString = queryString[0..$-1];
         } else {
             queryString = "stock/" ~ symbols[0] ~ "/";
         }
 
         if (paramSet.length == 1) {
-            queryString ~= buildEndpoint(paramSet.keys()[0], paramSet[paramSet.keys()[0]]);
+            queryString ~= buildEndpoint(
+                    paramSet.keys()[0],
+                    paramSet[paramSet.keys()[0]],
+                    this.queriesMultipleSymbols());
         } else
             assert(0, "Not implemented");
 
@@ -77,11 +86,11 @@ struct Stock {
         this.paramSet[type] = params;
     }
 
-    string buildEndpoint(EndpointType type, ParamSet params) {
+    string buildEndpoint(EndpointType type, ParamSet params, bool isContinuing = false) {
         if (params.length == 0) {
-            return type;
+            return isContinuing ? "" : type;
         } else {
-            string endpoint = type ~ "?";
+            string endpoint = isContinuing ? "&" : type ~ "?";
             foreach (param, value; params) {
                 endpoint ~= param ~ "=" ~ value ~ "&";
             }
@@ -129,6 +138,15 @@ unittest {
     stock = Stock("AAPL").quote(true);
     assert(stock.toURL() == iexPrefix ~ "stock/AAPL/quote?displayPercent=true",
             stock.toURL());
+}
+
+@("quote() builds an endpoint for multiple stock symbols")
+unittest {
+    auto stock = Stock(["AAPL", "BDC"]).quote();
+    assert(stock.toURL() == iexPrefix ~ "stock/market/batch?symbols=AAPL,BDC&types=quote", stock.toURL());
+
+    stock = Stock(["AAPL", "BDC"]).quote(true);
+    assert(stock.toURL() == iexPrefix ~ "stock/market/batch?symbols=AAPL,BDC&types=quote&displayPercent=true", stock.toURL());
 }
 
 /** Request a quote for the stock(s).
