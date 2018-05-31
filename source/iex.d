@@ -40,11 +40,7 @@ alias ParamSet = string[string];
 */
 // TODO: There is a maximum of 10 endpoints in a query.
 struct Stock {
-    this(string symbol) {
-        this.symbols ~= symbol;
-    }
-
-    this(string[] symbols) in {
+    this(string[] symbols...) in {
         assert(symbols.length > 0);
     } do {
         this.symbols = symbols;
@@ -142,10 +138,10 @@ unittest {
 
 @("quote() builds an endpoint for multiple stock symbols")
 unittest {
-    auto stock = Stock(["AAPL", "BDC"]).quote();
+    auto stock = Stock("AAPL", "BDC").quote();
     assert(stock.toURL() == iexPrefix ~ "stock/market/batch?symbols=AAPL,BDC&types=quote", stock.toURL());
 
-    stock = Stock(["AAPL", "BDC"]).quote(true);
+    stock = Stock("AAPL", "BDC").quote(true);
     assert(stock.toURL() == iexPrefix ~ "stock/market/batch?symbols=AAPL,BDC&types=quote&displayPercent=true", stock.toURL());
 }
 
