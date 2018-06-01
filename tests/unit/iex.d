@@ -24,6 +24,32 @@ version(unittest) {
 }
 
 
+@("book() builds an endpoint for a single stock symbol")
+unittest {
+    auto stock = Stock("AAPL").book();
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/book", stock.toURL());
+}
+
+@("book() builds an endpoint for multiple stock symbols")
+unittest {
+    auto stock = Stock("AAPL", "BDC").book();
+    assert(stock.toURL() == iexPrefix ~ "stock/market/batch?symbols=AAPL,BDC&types=book", stock.toURL());
+}
+
+
+@("company() builds an endpoint for a single stock symbol")
+unittest {
+    auto stock = Stock("AAPL").company();
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/company", stock.toURL());
+}
+
+@("company() builds an endpoint for multiple stock symbols")
+unittest {
+    auto stock = Stock("AAPL", "BDC").company();
+    assert(stock.toURL() == iexPrefix ~ "stock/market/batch?symbols=AAPL,BDC&types=company", stock.toURL());
+}
+
+
 @("quote() builds an endpoint for a single stock symbol")
 unittest {
     import std.string : split;
@@ -47,6 +73,7 @@ unittest {
     assert(actual[0] == iexPrefix ~ "stock/market/batch");
     assert(actual[1].hasParameters(["symbols=AAPL,BDC", "types=quote", "displayPercent=true"]));
 }
+
 
 @("chart() builds an endpoint for pre-defined date ranges")
 unittest {

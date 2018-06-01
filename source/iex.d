@@ -147,6 +147,27 @@ Json query(string query, string[string] params, string prefix = iexPrefix) {
     return getContent(prefix ~ query, params).to!string().parseJsonString();
 }
 
+
+/** Get the book for the specified stock(s).
+
+    The data returned includes information from both the "deep" and the "quote"
+    endpoints.
+
+    Notes:
+        It appears that "deep" is undocumented and forbidden; legacy endpoint?
+*/
+Stock book(Stock stock) {
+    stock.addQueryType(EndpointType.Book);
+    return stock;
+}
+
+
+Stock company(Stock stock) {
+    stock.addQueryType(EndpointType.Company);
+    return stock;
+}
+
+
 /** Request a quote for the stock(s).
 
     Params:
