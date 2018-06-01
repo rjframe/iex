@@ -227,14 +227,19 @@ unittest {
 
 @("chart() builds an endpoint for multiple stock symbols")
 unittest {
-}
+    import std.string : split;
+    auto stock = Stock("AAPL", "BDC").chart("1y");
+    auto actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
+    assert(actual[1].hasParameters(["symbols=AAPL,BDC", "types=chart", "range=1y"]),
+            actual[1]);
 
-bool hasEnumMember(E, T)(T value) if (is(E == enum)) {
-    import std.traits : EnumMembers;
-    foreach (member; EnumMembers!E) {
-        if (member == value) return true;
-    }
-    return false;
+    stock = Stock("AAPL", "BDC").chart("20180531");
+    actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
+    assert(actual[1].hasParameters(
+            ["symbols=AAPL,BDC", "types=chart", "range=20180531"]),
+            actual[1]);
 }
 
 // TODO Doc: date currently only supports last 30 days.
@@ -252,6 +257,10 @@ Stock chart(Stock stock, string range,
     if (changeFromClose) params["changeFromClose"] = "true";
     if (last > 0) params["chartLast"] = last.text;
 
+    if (stock.queriesMultipleSymbols()) {
+        params["range"] = range;
+    }
+
     if (range.isNumeric && range.length == 8)
         stock.addQueryType(EndpointType.Chart, params, "/date/" ~ range);
     else if (hasEnumMember!ChartRange(range))
@@ -263,6 +272,14 @@ Stock chart(Stock stock, string range,
 }
 
 private:
+
+bool hasEnumMember(E, T)(T value) if (is(E == enum)) {
+    import std.traits : EnumMembers;
+    foreach (member; EnumMembers!E) {
+        if (member == value) return true;
+    }
+    return false;
+}
 
 version(unittest) {
     /**  Check that a string has the provided parameters in unittests.
