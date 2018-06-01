@@ -50,6 +50,34 @@ unittest {
 }
 
 
+@("delayedQuote() builds an endpoint for a single stock symbol")
+unittest {
+    auto stock = Stock("AAPL").delayedQuote();
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/delayed-quote", stock.toURL());
+}
+
+@("delayedQuote() builds an endpoint for multiple stock symbols")
+unittest {
+    auto stock = Stock("AAPL", "BDC").delayedQuote();
+    assert(stock.toURL() == iexPrefix ~ "stock/market/batch?symbols=AAPL,BDC&types=delayed-quote", stock.toURL());
+}
+
+
+@("dividends() builds an endpoint for a single stock symbol")
+unittest {
+    auto stock = Stock("AAPL").dividends(DividendRange.TwoYears);
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/dividends/2y", stock.toURL());
+}
+
+@("dividends() builds an endpoint for multiple stock symbols")
+unittest {
+    import std.string : split;
+    auto stock = Stock("AAPL", "BDC").dividends(DividendRange.TwoYears);
+    auto actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/AAPL/market/batch", actual[0]);
+    assert(actual[1].hasParameters(["symbols=AAPL,BDC", "range=2y"]), actual[1]);
+}
+
 @("quote() builds an endpoint for a single stock symbol")
 unittest {
     import std.string : split;
@@ -113,4 +141,10 @@ unittest {
     assert(actual[1].hasParameters(
             ["symbols=AAPL,BDC", "types=chart", "range=20180531"]),
             actual[1]);
+}
+
+
+@("TODO: Determine desired behavior when chart and dividend have different ranges")
+unittest {
+    assert(false);
 }

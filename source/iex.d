@@ -1,3 +1,7 @@
+/** Wrapper for the IEX trading API.
+
+    Documentation for the API is at https://iextrading.com/developer/docs/
+*/
 module iex;
 
 import vibe.data.json;
@@ -147,6 +151,18 @@ Json query(string query, string[string] params, string prefix = iexPrefix) {
     return getContent(prefix ~ query, params).to!string().parseJsonString();
 }
 
+/+ TODO: I'd like to do this but can't generate docs for it.
+string GenerateSimpleEndpoint(string endpoint, string type) {
+    return
+        "/** Test comment */" ~
+        "Stock " ~ endpoint ~ "(Stock stock) {\n"
+      ~ "    stock.addQueryType(" ~ type ~ ");\n"
+      ~ "    return stock;\n"
+      ~ "}";
+}
+mixin(GenerateSimpleEndpoint("book", "EndpointType.Book"));
++/
+
 
 /** Get the book for the specified stock(s).
 
@@ -164,6 +180,40 @@ Stock book(Stock stock) {
 
 Stock company(Stock stock) {
     stock.addQueryType(EndpointType.Company);
+    return stock;
+}
+
+
+Stock delayedQuote(Stock stock) {
+    stock.addQueryType(EndpointType.DelayedQuote);
+    return stock;
+}
+
+/** Values for the date range in a chart query. A custom date can be used
+    instead.
+*/
+enum DividendRange : string {
+    FiveYears = "5y",
+    TwoYears = "2y",
+    OneYear = "1y",
+    YearToDate = "ytd",
+    YTD = ChartRange.YearToDate,
+    SixMonths = "6m",
+    ThreeMonths = "3m",
+    OneMonth = "1m"
+}
+
+/** Build the endpoint to request dividends.
+
+    Params:
+        range = The range for which the list of distributions is desired.
+*/
+Stock dividends(Stock stock, DividendRange range) {
+    string[string] params;
+    if (stock.queriesMultipleSymbols()) {
+        params["range"] = range;
+    }
+    stock.addQueryType(EndpointType.Dividends, params, "/" ~ range);
     return stock;
 }
 
