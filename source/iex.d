@@ -4,6 +4,9 @@
 */
 module iex;
 
+import std.typecons : Flag;
+public import std.typecons : Yes, No;
+
 import vibe.data.json;
 
 enum iexPrefix = "https://api.iextrading.com/1.0/";
@@ -201,21 +204,28 @@ enum ChartRange : string {
         range =             The date range for which to retrieve prices. A custom
                             date may be passed in the format "YYYYMMDD" within
                             the last thirty days.
-        reset =             If true, the 1 day chart will reset at midnight
+        reset =             If Yes, the 1 day chart will reset at midnight
                             instead of 9:30 AM ET.
-        simplify =          If true, runs a polyline simplification using the
+        simplify =          If Yes, runs a polyline simplification using the
                             Douglas-Peucker algorithm.
-        changeFromClose =   If true, "changeOverTime" and "marketChangeOverTime"
+        changeFromClose =   If Yes, "changeOverTime" and "marketChangeOverTime"
                             will be relative to the previous day close instead of
                             the first value.
         last =              Return the last n elements.
 */
-Stock chart(Stock stock, string range,
-        bool resetAtMidnight = false, bool simplify = false, int interval = -1,
-        bool changeFromClose = false, int last = -1) {
+Stock chart(
+        Stock stock,
+        string range,
+        Flag!"resetAtMidnight" resetAtMidnight = No.resetAtMidnight,
+        Flag!"simplify" simplify = No.simplify,
+        int interval = -1,
+        Flag!"changeFromClose" changeFromClose = No.changeFromClose,
+        int last = -1) {
     import std.conv : text;
     import std.string : isNumeric;
     // TODO: Enforce custom date is within last thirty days.
+    // TODO: I think last overrides range; test this, and if so, only take one
+    // or the other.
 
     string[string] params;
 
@@ -312,12 +322,12 @@ Stock financials(Stock stock) {
 
     Params:
         stock =             The Stock object to manipulate.
-        displayPercent =    If true, percentage values are multiplied by 100.
+        displayPercent =    If Yes, percentage values are multiplied by 100.
 
     See_Also:
         https://iextrading.com/developer/docs/#quote
 */
-Stock quote(Stock stock, bool displayPercent = false) {
+Stock quote(Stock stock, Flag!"displayPercent" displayPercent = No.displayPercent) {
     string[string] params;
     if (displayPercent) params["displayPercent"] = "true";
     stock.addQueryType(EndpointType.Quote, params);

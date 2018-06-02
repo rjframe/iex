@@ -37,6 +37,48 @@ unittest {
 }
 
 
+@("chart() builds an endpoint for pre-defined date ranges")
+unittest {
+    auto stock = Stock("AAPL").chart(ChartRange.YearToDate);
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/chart/"  ~ ChartRange.YTD,
+            stock.toURL());
+
+    stock = Stock("AAPL")
+            .chart(ChartRange.YearToDate, No.resetAtMidnight, Yes.simplify, 3);
+
+    import std.string : split;
+    auto actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/AAPL/chart/" ~ ChartRange.YTD,
+            actual[0]);
+    assert(actual[1].hasParameters(["chartSimplify=true", "chartInterval=3"]),
+            actual[1]);
+}
+
+@("chart() builds an endpoint for custom dates")
+unittest {
+    auto stock = Stock("AAPL").chart("20180531");
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/chart/date/20180531",
+            stock.toURL());
+}
+
+@("chart() builds an endpoint for multiple stock symbols")
+unittest {
+    import std.string : split;
+    auto stock = Stock("AAPL", "BDC").chart("1y");
+    auto actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
+    assert(actual[1].hasParameters(["symbols=AAPL,BDC", "types=chart", "range=1y"]),
+            actual[1]);
+
+    stock = Stock("AAPL", "BDC").chart("20180531");
+    actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
+    assert(actual[1].hasParameters(
+            ["symbols=AAPL,BDC", "types=chart", "range=20180531"]),
+            actual[1]);
+}
+
+
 @("company() builds an endpoint for a single stock symbol")
 unittest {
     auto stock = Stock("AAPL").company();
@@ -134,7 +176,7 @@ unittest {
     auto stock = Stock("AAPL").quote();
     assert(stock.toURL() == iexPrefix ~ "stock/AAPL/quote", stock.toURL());
 
-    stock = Stock("AAPL").quote(true);
+    stock = Stock("AAPL").quote(Yes.displayPercent);
     auto actual = stock.toURL().split('?');
     assert(actual[0] == iexPrefix ~ "stock/AAPL/quote");
     assert(actual[1].hasParameters(["displayPercent=true"]));
@@ -146,51 +188,10 @@ unittest {
     auto stock = Stock("AAPL", "BDC").quote();
     assert(stock.toURL() == iexPrefix ~ "stock/market/batch?symbols=AAPL,BDC&types=quote", stock.toURL());
 
-    stock = Stock("AAPL", "BDC").quote(true);
+    stock = Stock("AAPL", "BDC").quote(Yes.displayPercent);
     auto actual = stock.toURL().split('?');
     assert(actual[0] == iexPrefix ~ "stock/market/batch");
     assert(actual[1].hasParameters(["symbols=AAPL,BDC", "types=quote", "displayPercent=true"]));
-}
-
-
-@("chart() builds an endpoint for pre-defined date ranges")
-unittest {
-    auto stock = Stock("AAPL").chart(ChartRange.YearToDate);
-    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/chart/"  ~ ChartRange.YTD,
-            stock.toURL());
-
-    stock = Stock("AAPL").chart(ChartRange.YearToDate, false, true, 3);
-
-    import std.string : split;
-    auto actual = stock.toURL().split('?');
-    assert(actual[0] == iexPrefix ~ "stock/AAPL/chart/" ~ ChartRange.YTD,
-            actual[0]);
-    assert(actual[1].hasParameters(["chartSimplify=true", "chartInterval=3"]),
-            actual[1]);
-}
-
-@("chart() builds an endpoint for custom dates")
-unittest {
-    auto stock = Stock("AAPL").chart("20180531");
-    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/chart/date/20180531",
-            stock.toURL());
-}
-
-@("chart() builds an endpoint for multiple stock symbols")
-unittest {
-    import std.string : split;
-    auto stock = Stock("AAPL", "BDC").chart("1y");
-    auto actual = stock.toURL().split('?');
-    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
-    assert(actual[1].hasParameters(["symbols=AAPL,BDC", "types=chart", "range=1y"]),
-            actual[1]);
-
-    stock = Stock("AAPL", "BDC").chart("20180531");
-    actual = stock.toURL().split('?');
-    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
-    assert(actual[1].hasParameters(
-            ["symbols=AAPL,BDC", "types=chart", "range=20180531"]),
-            actual[1]);
 }
 
 
