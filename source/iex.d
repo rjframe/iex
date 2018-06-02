@@ -180,20 +180,80 @@ Stock book(Stock stock) {
 }
 
 
+/** Values for the date range in a chart query. A custom date can be used
+    instead.
+*/
+enum ChartRange : string {
+    FiveYears = "5y",
+    TwoYears = "2y",
+    OneYear = "1y",
+    YearToDate = "ytd",
+    YTD = ChartRange.YearToDate,
+    SixMonths = "6m",
+    ThreeMonths = "3m",
+    OneDay = "1d",
+    Dynamic = "dynamic"
+}
+
+/** Request historical prices for a stock.
+
+    Params:
+        range =             The date range for which to retrieve prices. A custom
+                            date may be passed in the format "YYYYMMDD" within
+                            the last thirty days.
+        reset =             If true, the 1 day chart will reset at midnight
+                            instead of 9:30 AM ET.
+        simplify =          If true, runs a polyline simplification using the
+                            Douglas-Peucker algorithm.
+        changeFromClose =   If true, "changeOverTime" and "marketChangeOverTime"
+                            will be relative to the previous day close instead of
+                            the first value.
+        last =              Return the last n elements.
+*/
+Stock chart(Stock stock, string range,
+        bool resetAtMidnight = false, bool simplify = false, int interval = -1,
+        bool changeFromClose = false, int last = -1) {
+    import std.conv : text;
+    import std.string : isNumeric;
+    // TODO: Enforce custom date is within last thirty days.
+
+    string[string] params;
+
+    if (resetAtMidnight) params["chartReset"] = "true";
+    if (simplify) params["chartSimplify"] = "true";
+    if (interval > 0) params["chartInterval"] = interval.text;
+    if (changeFromClose) params["changeFromClose"] = "true";
+    if (last > 0) params["chartLast"] = last.text;
+
+    if (stock.queriesMultipleSymbols()) {
+        params["range"] = range;
+    }
+
+    if (range.isNumeric && range.length == 8)
+        stock.addQueryType(EndpointType.Chart, params, "/date/" ~ range);
+    else if (hasEnumMember!ChartRange(range))
+        stock.addQueryType(EndpointType.Chart, params, "/" ~ range);
+    else
+        throw new Exception("Invalid range for chart: " ~ range);
+
+    return stock;
+}
+
+
+/** Retrieve information about the specified company. */
 Stock company(Stock stock) {
     stock.addQueryType(EndpointType.Company);
     return stock;
 }
 
 
+/** Retrieve the 15-minute delayed market quote. */
 Stock delayedQuote(Stock stock) {
     stock.addQueryType(EndpointType.DelayedQuote);
     return stock;
 }
 
-/** Values for the date range in a chart query. A custom date can be used
-    instead.
-*/
+/** Values for the date range in a dividend query. */
 enum DividendRange : string {
     FiveYears = "5y",
     TwoYears = "2y",
@@ -205,7 +265,7 @@ enum DividendRange : string {
     OneMonth = "1m"
 }
 
-/** Build the endpoint to request dividends.
+/** Request dividend distribution history.
 
     Params:
         range = The range for which the list of distributions is desired.
@@ -220,14 +280,14 @@ Stock dividends(Stock stock, DividendRange range) {
 }
 
 
-/** Build an endpoint to request earnings from the four most recent quarters. */
+/** Request earnings from the four most recent quarters. */
 Stock earnings(Stock stock) {
     stock.addQueryType(EndpointType.Earnings);
     return stock;
 }
 
 
-/** Build an endpoint to return effective spread of a stock.
+/** Return the effective spread of a stock.
 
     Returns an array of effective spread, eligible volume, and price improvement.
 */
@@ -237,7 +297,7 @@ Stock effectiveSpread(Stock stock) {
 }
 
 
-/** Build an endpoint to request financial data.
+/** Request a company's financial data.
 
     Retrieves the company's income statement, balance sheet, and cash flow
     statement from the four most recent quarters.
@@ -261,50 +321,6 @@ Stock quote(Stock stock, bool displayPercent = false) {
     string[string] params;
     if (displayPercent) params["displayPercent"] = "true";
     stock.addQueryType(EndpointType.Quote, params);
-    return stock;
-}
-
-/** Values for the date range in a chart query. A custom date can be used
-    instead.
-*/
-enum ChartRange : string {
-    FiveYears = "5y",
-    TwoYears = "2y",
-    OneYear = "1y",
-    YearToDate = "ytd",
-    YTD = ChartRange.YearToDate,
-    SixMonths = "6m",
-    ThreeMonths = "3m",
-    OneDay = "1d",
-    Dynamic = "dynamic"
-}
-
-// TODO Doc: date currently only supports last 30 days.
-Stock chart(Stock stock, string range,
-        bool resetAtMidnight = false, bool simplify = false, int interval = -1,
-        bool changeFromClose = false, int last = -1) {
-    import std.conv : text;
-    import std.string : isNumeric;
-
-    string[string] params;
-
-    if (resetAtMidnight) params["chartReset"] = "true";
-    if (simplify) params["chartSimplify"] = "true";
-    if (interval > 0) params["chartInterval"] = interval.text;
-    if (changeFromClose) params["changeFromClose"] = "true";
-    if (last > 0) params["chartLast"] = last.text;
-
-    if (stock.queriesMultipleSymbols()) {
-        params["range"] = range;
-    }
-
-    if (range.isNumeric && range.length == 8)
-        stock.addQueryType(EndpointType.Chart, params, "/date/" ~ range);
-    else if (hasEnumMember!ChartRange(range))
-        stock.addQueryType(EndpointType.Chart, params, "/" ~ range);
-    else
-        throw new Exception("Invalid range for chart: " ~ range);
-
     return stock;
 }
 
