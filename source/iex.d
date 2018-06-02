@@ -152,6 +152,8 @@ Json query(string query, string[string] params, string prefix = iexPrefix) {
 }
 
 /+ TODO: I'd like to do this but can't generate docs for it.
+    https://issues.dlang.org/show_bug.cgi?id=2420
+
 string GenerateSimpleEndpoint(string endpoint, string type) {
     return
         "/** Test comment */" ~
@@ -214,6 +216,34 @@ Stock dividends(Stock stock, DividendRange range) {
         params["range"] = range;
     }
     stock.addQueryType(EndpointType.Dividends, params, "/" ~ range);
+    return stock;
+}
+
+
+/** Build an endpoint to request earnings from the four most recent quarters. */
+Stock earnings(Stock stock) {
+    stock.addQueryType(EndpointType.Earnings);
+    return stock;
+}
+
+
+/** Build an endpoint to return effective spread of a stock.
+
+    Returns an array of effective spread, eligible volume, and price improvement.
+*/
+Stock effectiveSpread(Stock stock) {
+    stock.addQueryType(EndpointType.EffectiveSpread);
+    return stock;
+}
+
+
+/** Build an endpoint to request financial data.
+
+    Retrieves the company's income statement, balance sheet, and cash flow
+    statement from the four most recent quarters.
+*/
+Stock financials(Stock stock) {
+    stock.addQueryType(EndpointType.Financials);
     return stock;
 }
 

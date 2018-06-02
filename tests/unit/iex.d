@@ -59,7 +59,9 @@ unittest {
 @("delayedQuote() builds an endpoint for multiple stock symbols")
 unittest {
     auto stock = Stock("AAPL", "BDC").delayedQuote();
-    assert(stock.toURL() == iexPrefix ~ "stock/market/batch?symbols=AAPL,BDC&types=delayed-quote", stock.toURL());
+    assert(stock.toURL() ==
+            iexPrefix ~ "stock/market/batch?symbols=AAPL,BDC&types=delayed-quote",
+            stock.toURL());
 }
 
 
@@ -74,9 +76,57 @@ unittest {
     import std.string : split;
     auto stock = Stock("AAPL", "BDC").dividends(DividendRange.TwoYears);
     auto actual = stock.toURL().split('?');
-    assert(actual[0] == iexPrefix ~ "stock/AAPL/market/batch", actual[0]);
+    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
     assert(actual[1].hasParameters(["symbols=AAPL,BDC", "range=2y"]), actual[1]);
 }
+
+
+@("earnings() builds an endpoint for a single stock symbol")
+unittest {
+    auto stock = Stock("AAPL").earnings();
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/earnings", stock.toURL());
+}
+
+@("earnings() builds an endpoint for multiple stock symbols")
+unittest {
+    auto stock = Stock("AAPL", "BDC").earnings();
+    assert(stock.toURL() ==
+            iexPrefix ~ "stock/market/batch?symbols=AAPL,BDC&types=earnings",
+            stock.toURL());
+}
+
+
+@("effectiveSpread() builds an endpoint for a single stock symbol")
+unittest {
+    auto stock = Stock("AAPL").effectiveSpread();
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/effective-spread",
+            stock.toURL());
+}
+
+@("effectiveSpread() builds an endpoint for multiple stock symbols")
+unittest {
+    auto stock = Stock("AAPL", "BDC").effectiveSpread();
+    assert(stock.toURL() ==
+            iexPrefix ~ "stock/market/batch?symbols=AAPL,BDC&types=effective-spread",
+            stock.toURL());
+}
+
+
+@("financials() builds an endpoint for a single stock symbol")
+unittest {
+    auto stock = Stock("AAPL").financials();
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/financials",
+            stock.toURL());
+}
+
+@("financials() builds an endpoint for multiple stock symbols")
+unittest {
+    auto stock = Stock("AAPL", "BDC").financials();
+    assert(stock.toURL() ==
+            iexPrefix ~ "stock/market/batch?symbols=AAPL,BDC&types=financials",
+            stock.toURL());
+}
+
 
 @("quote() builds an endpoint for a single stock symbol")
 unittest {
