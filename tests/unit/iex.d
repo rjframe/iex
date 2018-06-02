@@ -78,6 +78,13 @@ unittest {
             actual[1]);
 }
 
+@("historicalPrices() is equivalent to chart()")
+unittest {
+    auto chart = Stock("AAPL").chart(ChartRange.OneYear);
+    auto history = Stock("AAPL").historicalPrices(ChartRange.OneYear);
+    assert(chart == history, history.toURL());
+}
+
 
 @("company() builds an endpoint for a single stock symbol")
 unittest {
@@ -170,6 +177,42 @@ unittest {
 }
 
 
+@("thresholdSecurities() builds an endpoint for a single stock symbol")
+unittest {
+    import std.string : split;
+    auto stock = Stock("market").thresholdSecurities();
+    assert(stock.toURL() == iexPrefix ~ "stock/market/threshold-securities/",
+            stock.toURL());
+
+    stock = Stock("market").thresholdSecurities("20180531");
+    assert(stock.toURL() ==
+            iexPrefix ~ "stock/market/threshold-securities/" ~ "20180531",
+            stock.toURL());
+}
+
+@("thresholdSecurities() ignores specific stock symbols passed to it")
+unittest {
+    import std.string : split;
+    auto stock = Stock("AAPL").thresholdSecurities();
+    assert(stock.toURL() == iexPrefix ~ "stock/market/threshold-securities/",
+            stock.toURL());
+}
+
+@("thresholdSecurities() builds an endpoint as part of a batch")
+unittest {
+    import std.string : split;
+    auto stock = Stock("AAPL", "BDC")
+            .chart(ChartRange.YTD)
+            .thresholdSecurities();
+
+    auto actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
+    assert(actual[1].hasParameters(
+            ["symbols=AAPL,BDC", "types=chart,threshold-securities", "range=ytd"]),
+            actual[1]);
+}
+
+
 @("quote() builds an endpoint for a single stock symbol")
 unittest {
     import std.string : split;
@@ -195,7 +238,30 @@ unittest {
 }
 
 
+@("Build multiple-symbol batch endpoints")
+unittest {
+    import std.string : split;
+    auto stock = Stock("AAPL", "BDC")
+            .quote()
+            .news(10) // Last 10 items.
+            .chart(ChartRange.OneMonth);
+
+    auto actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
+    assert(actual[1].hasParameters(
+            ["symbols=AAPL,BDC", "types=quote,news,chart", "range=1m", "last=10"]),
+            actual[1]);
+}
+
+
 @("TODO: Determine desired behavior when chart and dividend have different ranges")
+/+ I don't think I like this, but it's better than allowing inconsistency.
+
+    auto stock = Stock("AAPL")
+                .chart()
+                .dividends()
+                    .sharedParams("1y");
++/
 unittest {
     assert(false);
 }

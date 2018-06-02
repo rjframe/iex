@@ -194,6 +194,7 @@ enum ChartRange : string {
     YTD = ChartRange.YearToDate,
     SixMonths = "6m",
     ThreeMonths = "3m",
+    OneMonth = "1m",
     OneDay = "1d",
     Dynamic = "dynamic"
 }
@@ -247,6 +248,19 @@ Stock chart(
         throw new Exception("Invalid range for chart: " ~ range);
 
     return stock;
+}
+
+/// ditto
+Stock historicalPrices(
+        Stock stock,
+        string range,
+        Flag!"resetAtMidnight" resetAtMidnight = No.resetAtMidnight,
+        Flag!"simplify" simplify = No.simplify,
+        int interval = -1,
+        Flag!"changeFromClose" changeFromClose = No.changeFromClose,
+        int last = -1) {
+    return chart(stock, range,
+            resetAtMidnight, simplify, interval, changeFromClose, last);
 }
 
 
@@ -318,6 +332,32 @@ Stock financials(Stock stock) {
 }
 
 
+/** Request threshold securities.
+
+    Params:
+        date =  List data for the specified date in YYYYMMDD format, or "sample"
+                for sample data.
+        token = Your IEX account token; if not specified, the CUSIP field will
+                be excluded from the results.
+*/
+Stock thresholdSecurities(Stock stock, string date = "", string token = "") {
+    string[string] params;
+    if (token.length > 0) params["token"] = token;
+
+    if (stock.queriesMultipleSymbols() && date.length > 0)
+        params["date"] = date;
+    else
+        stock.symbols[0] = "market";
+
+    stock.addQueryType(EndpointType.ThresholdSecuritiesList, params, "/" ~ date);
+    return stock;
+}
+
+
+Stock news(Stock stock, int last = -1) {
+    assert(0, "news() not implemented.");
+}
+
 /** Request a quote for the stock(s).
 
     Params:
@@ -333,6 +373,7 @@ Stock quote(Stock stock, Flag!"displayPercent" displayPercent = No.displayPercen
     stock.addQueryType(EndpointType.Quote, params);
     return stock;
 }
+
 
 private:
 
