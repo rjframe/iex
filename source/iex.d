@@ -44,6 +44,13 @@ struct Endpoint {
     string[string] params;
 }
 
+/** Specify response formats for endpoints that support alternatives to JSON. */
+enum ResponseFormat : string {
+    json = "json",
+    csv = "csv",
+    psv = "psv"
+}
+
 /** Build a query on the Stock endpoint of the IEX API.
 
     The string created by calling toURL() is an IEX API-compatible URL.
@@ -332,12 +339,6 @@ Stock effectiveSpread(Stock stock) {
 Stock financials(Stock stock) {
     stock.addQueryType(EndpointType.Financials);
     return stock;
-}
-
-enum ResponseFormat : string {
-    json = "json",
-    csv = "csv",
-    psv = "psv"
 }
 
 /** Request threshold securities.
