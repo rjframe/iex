@@ -200,7 +200,6 @@ unittest {
             stock.toURL());
 }
 
-@HiddenTest("batches not yet implemented")
 @("thresholdSecurities() builds an endpoint as part of a batch")
 unittest {
     import std.string : split;
@@ -211,7 +210,7 @@ unittest {
     auto actual = stock.toURL().split('?');
     assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
     assert(actual[1].hasParameters(
-            ["symbols=AAPL,BDC", "types=chart,threshold-securities", "range=ytd"]),
+            ["symbols=AAPL,BDC", "types=threshold-securities,chart", "range=ytd"]),
             actual[1]);
 }
 
@@ -294,6 +293,49 @@ unittest {
             stock.toURL());
 }
 
+@("logo() builds an endpoint for a single symbol")
+unittest {
+    auto stock = Stock("AAPL").logo();
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/logo",
+            stock.toURL());
+}
+
+@("logo() builds an endpoint for multiple symbols")
+unittest {
+    auto stock = Stock("AAPL", "BDC").logo();
+    assert(stock.toURL() ==
+            iexPrefix ~ "stock/market/batch?symbols=AAPL,BDC&types=logo",
+            stock.toURL());
+}
+
+
+@("news() builds an endpoint for a single symbol")
+unittest {
+    auto stock = Stock("AAPL").news();
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/news", stock.toURL());
+
+    stock = Stock("market").news();
+    assert(stock.toURL() == iexPrefix ~ "stock/market/news", stock.toURL());
+
+    stock = Stock("AAPL").news(5);
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/news/last/5", stock.toURL());
+}
+
+@("news() builds an endpoint for multiple symbols")
+unittest {
+    import std.string : split;
+    auto stock = Stock("AAPL", "BDC").news();
+    auto actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
+    assert(actual[1].hasParameters(["symbols=AAPL,BDC", "types=news"]), actual[1]);
+
+    stock = Stock("AAPL", "BDC").news(5);
+    actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
+    assert(actual[1].hasParameters(["symbols=AAPL,BDC", "types=news", "last=5"]),
+            actual[1]);
+}
+
 
 @("quote() builds an endpoint for a single stock symbol")
 unittest {
@@ -320,19 +362,18 @@ unittest {
 }
 
 
-@HiddenTest("news() not yet implemented")
 @("Build multiple-symbol batch endpoints")
 unittest {
     import std.string : split;
     auto stock = Stock("AAPL", "BDC")
             .quote()
-            .news(10) // Last 10 items.
+            .news(5) // Last 5 items.
             .chart(ChartRange.OneMonth);
 
     auto actual = stock.toURL().split('?');
     assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
     assert(actual[1].hasParameters(
-            ["symbols=AAPL,BDC", "types=quote,news,chart", "range=1m", "last=10"]),
+            ["symbols=AAPL,BDC", "types=quote,chart,news", "range=1m", "last=5"]),
             actual[1]);
 }
 

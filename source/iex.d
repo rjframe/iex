@@ -71,7 +71,7 @@ struct Stock {
     string toURL(string prefix = iexPrefix) {
         string queryString;
 
-        if (this.queriesMultipleSymbols()) {
+        if (this.queriesMultipleSymbols() || this.endpoints.length > 1) {
             queryString = "stock/market/batch?symbols=" ~ symbols[0];
             for (int i = 1; i < symbols.length; ++i) {
                 queryString ~= "," ~ symbols[i];
@@ -91,8 +91,13 @@ struct Stock {
                     this.endpoints.keys()[0],
                     this.endpoints[this.endpoints.keys()[0]],
                     this.queriesMultipleSymbols());
-        } else
-            assert(0, "Not implemented");
+        } else {
+            foreach (type, endpoint; this.endpoints) {
+                foreach (key, val; endpoint.params) {
+                    queryString ~= "&" ~ key ~ "=" ~ val;
+                }
+            }
+        }
 
         return prefix ~ queryString;
     }
@@ -358,10 +363,11 @@ Stock thresholdSecurities(
     string[string] params;
     if (token.length > 0) params["token"] = token;
 
-    if (stock.queriesMultipleSymbols() && date.length > 0)
-        params["date"] = date;
-    else
+    if (stock.queriesMultipleSymbols()) {
+        if (date.length > 0) params["date"] = date;
+    } else {
         stock.symbols[0] = "market";
+    }
 
     if (format != ResponseFormat.json) {
         params["format"] = format;
@@ -435,8 +441,34 @@ Stock list(
 }
 
 
-Stock news(Stock stock, int last = -1) {
-    assert(0, "news() not implemented.");
+/** Retrieve the URL to the company's logo. */
+Stock logo(Stock stock) {
+    stock.addQueryType(EndpointType.Logo);
+    return stock;
+}
+
+
+/** Retrieve news about the specified stocks or the market.
+
+    Params:
+        last =  The number of news results to return, between 1 and 50 inclusive.
+                The default is 10.
+*/
+Stock news(Stock stock, int last = 10) in {
+    assert(last > 0 && last < 51, "last must be between 1 and 50 inclusive.");
+} do {
+    import std.conv : text;
+    string[string] params;
+
+    if (stock.queriesMultipleSymbols() && last != 10)
+        params["last"] = last.text;
+
+    if (last != 10)
+        stock.addQueryType(EndpointType.News, params, "/last/" ~ last.text);
+    else
+        stock.addQueryType(EndpointType.News, params);
+
+    return stock;
 }
 
 
