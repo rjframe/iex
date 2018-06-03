@@ -293,6 +293,7 @@ unittest {
             stock.toURL());
 }
 
+
 @("logo() builds an endpoint for a single symbol")
 unittest {
     auto stock = Stock("AAPL").logo();
@@ -333,6 +334,87 @@ unittest {
     actual = stock.toURL().split('?');
     assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
     assert(actual[1].hasParameters(["symbols=AAPL,BDC", "types=news", "last=5"]),
+            actual[1]);
+}
+
+
+@("ohlc()  builds an endpoint for a single stock symbol")
+unittest {
+    auto stock = Stock("AAPL").ohlc();
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/ohlc", stock.toURL());
+
+    stock = Stock("market").ohlc();
+    assert(stock.toURL() == iexPrefix ~ "stock/market/ohlc", stock.toURL());
+}
+
+@("ohlc()  builds an endpoint for multiple symbols")
+unittest {
+    import std.string : split;
+    auto stock = Stock("AAPL", "BDC").ohlc();
+    auto actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
+    assert(actual[1].hasParameters(["symbols=AAPL,BDC", "types=ohlc"]), actual[1]);
+}
+
+@("openclose() is equivalent to ohlc()")
+unittest {
+    auto ohlc = Stock("AAPL").ohlc();
+    auto openclose = Stock("AAPL").openclose();
+}
+
+
+@("peers()  builds an endpoint for a single stock symbol")
+unittest {
+    auto stock = Stock("AAPL").peers();
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/peers", stock.toURL());
+
+    stock = Stock("market").peers();
+    assert(stock.toURL() == iexPrefix ~ "stock/market/peers", stock.toURL());
+}
+
+@("peers()  builds an endpoint for multiple symbols")
+unittest {
+    import std.string : split;
+    auto stock = Stock("AAPL", "BDC").peers();
+    auto actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
+    assert(actual[1].hasParameters(["symbols=AAPL,BDC", "types=peers"]), actual[1]);
+}
+
+
+@("previous()  builds an endpoint for a single stock symbol")
+unittest {
+    auto stock = Stock("AAPL").previous();
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/previous", stock.toURL());
+
+    stock = Stock("market").previous();
+    assert(stock.toURL() == iexPrefix ~ "stock/market/previous", stock.toURL());
+}
+
+@("ohlc()  builds an endpoint for multiple symbols")
+unittest {
+    import std.string : split;
+    auto stock = Stock("AAPL", "BDC").previous();
+    auto actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
+    assert(actual[1].hasParameters(["symbols=AAPL,BDC", "types=previous"]),
+            actual[1]);
+}
+
+
+@("price()  builds an endpoint for a single stock symbol")
+unittest {
+    auto stock = Stock("AAPL").price();
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/price", stock.toURL());
+}
+
+@("price()  builds an endpoint for multiple symbols")
+unittest {
+    import std.string : split;
+    auto stock = Stock("AAPL", "BDC").price();
+    auto actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
+    assert(actual[1].hasParameters(["symbols=AAPL,BDC", "types=price"]),
             actual[1]);
 }
 

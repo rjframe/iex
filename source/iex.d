@@ -472,6 +472,39 @@ Stock news(Stock stock, int last = 10) in {
 }
 
 
+/** Retrieve the open and close for the specified symbol(s) or the market. */
+Stock ohlc(Stock stock) {
+    stock.addQueryType(EndpointType.OHLC);
+    return stock;
+}
+
+// ditto
+Stock openclose(Stock stock) { return ohlc(stock); }
+
+
+/** Retrieve a list of IEX-defined peers for a stock. */
+Stock peers(Stock stock) {
+    stock.addQueryType(EndpointType.Peers);
+    return stock;
+}
+
+
+/** Retrieve  the previous day adjusted price data for a stock or the market. */
+Stock previous(Stock stock) {
+    stock.addQueryType(EndpointType.Previous);
+    return stock;
+}
+
+
+/** Retrieve the EIX real time price, the 15 minute delayed price, or previous
+    close price.
+*/
+Stock price(Stock stock) {
+    stock.addQueryType(EndpointType.Price);
+    return stock;
+}
+
+
 /** Request a quote for the stock(s).
 
     Params:
