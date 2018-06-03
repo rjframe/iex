@@ -331,6 +331,11 @@ Stock financials(Stock stock) {
     return stock;
 }
 
+enum ResponseFormat : string {
+    json = "json",
+    csv = "csv",
+    psv = "psv"
+}
 
 /** Request threshold securities.
 
@@ -340,7 +345,11 @@ Stock financials(Stock stock) {
         token = Your IEX account token; if not specified, the CUSIP field will
                 be excluded from the results.
 */
-Stock thresholdSecurities(Stock stock, string date = "", string token = "") {
+Stock thresholdSecurities(
+        Stock stock,
+        string date = "",
+        ResponseFormat format = ResponseFormat.json,
+        string token = "") {
     string[string] params;
     if (token.length > 0) params["token"] = token;
 
@@ -348,6 +357,10 @@ Stock thresholdSecurities(Stock stock, string date = "", string token = "") {
         params["date"] = date;
     else
         stock.symbols[0] = "market";
+
+    if (format != ResponseFormat.json) {
+        params["format"] = format;
+    }
 
     stock.addQueryType(EndpointType.ThresholdSecuritiesList, params, "/" ~ date);
     return stock;
