@@ -560,6 +560,15 @@ Stock splits(Stock stock, SplitRange range) {
 }
 
 
+/** Retrieve the 15 minute delayed and 30 day average consolidated volume
+    percentage of a stock by market.
+*/
+Stock volumeByVenue(Stock stock) {
+    stock.addQueryType(EndpointType.VolumeByVenue);
+    return stock;
+}
+
+
 private:
 
 bool hasEnumMember(E, T)(T value) if (is(E == enum)) {

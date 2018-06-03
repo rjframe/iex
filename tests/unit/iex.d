@@ -482,6 +482,21 @@ unittest {
 }
 
 
+@("volumeByVenue() builds an endpoint for a single stock symbol")
+unittest {
+    auto stock = Stock("AAPL").volumeByVenue();
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/volume-by-venue", stock.toURL());
+}
+
+@("volumeByVenue() builds an endpoint for multiple stock symbols")
+unittest {
+    auto stock = Stock("AAPL", "BDC").volumeByVenue();
+    assert(stock.toURL() ==
+            iexPrefix ~ "stock/market/batch?symbols=AAPL,BDC&types=volume-by-venue",
+            stock.toURL());
+}
+
+
 @("Build multiple-symbol batch endpoints")
 unittest {
     import std.string : split;
