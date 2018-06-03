@@ -279,6 +279,19 @@ Stock historicalPrices(
             resetAtMidnight, simplify, interval, changeFromClose, last);
 }
 
+/// ditto
+Stock timeSeries(
+        Stock stock,
+        string range,
+        Flag!"resetAtMidnight" resetAtMidnight = No.resetAtMidnight,
+        Flag!"simplify" simplify = No.simplify,
+        int interval = -1,
+        Flag!"changeFromClose" changeFromClose = No.changeFromClose,
+        int last = -1) {
+    return chart(stock, range,
+            resetAtMidnight, simplify, interval, changeFromClose, last);
+}
+
 
 /** Retrieve information about the specified company. */
 Stock company(Stock stock) {

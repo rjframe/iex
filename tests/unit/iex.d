@@ -87,6 +87,13 @@ unittest {
     assert(chart == history, history.toURL());
 }
 
+@("timeSeries() is equivalent to chart()")
+unittest {
+    auto chart = Stock("AAPL").chart(ChartRange.OneYear);
+    auto series = Stock("AAPL").timeSeries(ChartRange.OneYear);
+    assert(chart == series, series.toURL());
+}
+
 
 @("company() builds an endpoint for a single stock symbol")
 unittest {
