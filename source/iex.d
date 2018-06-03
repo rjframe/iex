@@ -23,6 +23,7 @@ enum EndpointType : string {
     Financials = "financials",
     ThresholdSecuritiesList = "threshold-securities",
     ShortInterestList = "short-interest",
+    KeyStats = "stats",
     LargestTrades = "largest-trades",
     List = "list",
     Logo = "logo",
@@ -395,9 +396,49 @@ Stock shortInterest(
 }
 
 
+/** Retrieve current stock information. */
+Stock keyStats(Stock stock) {
+    stock.addQueryType(EndpointType.KeyStats);
+    return stock;
+}
+
+
+/** Retrieve 15-minute delayed last sale eligible trades. */
+Stock largestTrades(Stock stock) {
+    stock.addQueryType(EndpointType.LargestTrades);
+    return stock;
+}
+
+
+enum MarketList : string {
+    MostActive = "mostactive",
+    Gainers = "gainers",
+    Losers = "losers",
+    volume = "iexvolume",
+    percent = "iexpercent"
+}
+
+Stock list(
+        Stock stock,
+        MarketList list,
+        Flag!"displayPercent" displayPercent = No.displayPercent) {
+    string[string] params;
+    if (stock.queriesMultipleSymbols())
+        params["list"] = list;
+    else
+        stock.symbols[0] = "market";
+
+    if (displayPercent) params["displayPercent"] = "true";
+
+    stock.addQueryType(EndpointType.List, params, "/" ~ list);
+    return stock;
+}
+
+
 Stock news(Stock stock, int last = -1) {
     assert(0, "news() not implemented.");
 }
+
 
 /** Request a quote for the stock(s).
 

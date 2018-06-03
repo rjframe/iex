@@ -242,6 +242,59 @@ unittest {
 }
 
 
+@("keyStats() builds an endpoint for a single stock symbol")
+unittest {
+    auto stock = Stock("AAPL").keyStats();
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/stats",
+            stock.toURL());
+}
+
+@("keyStats() builds an endpoint for multiple stock symbols")
+unittest {
+    auto stock = Stock("AAPL", "BDC").keyStats();
+    assert(stock.toURL() ==
+            iexPrefix ~ "stock/market/batch?symbols=AAPL,BDC&types=stats",
+            stock.toURL());
+}
+
+
+@("largestTrades() builds an endpoint for a single stock symbol")
+unittest {
+    auto stock = Stock("AAPL").largestTrades();
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/largest-trades",
+            stock.toURL());
+}
+
+@("largestTrades() builds an endpoint for multiple stock symbols")
+unittest {
+    auto stock = Stock("AAPL", "BDC").largestTrades();
+    assert(stock.toURL() ==
+            iexPrefix ~ "stock/market/batch?symbols=AAPL,BDC&types=largest-trades",
+            stock.toURL());
+}
+
+
+@("list() builds an endpoint for a single symbol")
+unittest {
+    import std.string : split;
+    auto stock = Stock("").list(MarketList.MostActive);
+    assert(stock.toURL() == iexPrefix ~ "stock/market/list/mostactive",
+            stock.toURL());
+
+    stock = Stock("").list(MarketList.MostActive, Yes.displayPercent);
+    auto actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/market/list/mostactive", actual[0]);
+    assert(actual[1].hasParameters(["displayPercent=true"]), actual[1]);
+}
+
+@("list() ignores individual stock symbols passed to it")
+unittest {
+    auto stock = Stock("AAPL").list(MarketList.MostActive);
+    assert(stock.toURL() == iexPrefix ~ "stock/market/list/mostactive",
+            stock.toURL());
+}
+
+
 @("quote() builds an endpoint for a single stock symbol")
 unittest {
     import std.string : split;
