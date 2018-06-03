@@ -522,6 +522,31 @@ Stock quote(Stock stock, Flag!"displayPercent" displayPercent = No.displayPercen
 }
 
 
+/** Retrieve a list of most active market symbols when peers are not available.
+*/
+Stock relevant(Stock stock) {
+    stock.addQueryType(EndpointType.Relevant);
+    return stock;
+}
+
+
+alias SplitRange = DividendRange;
+
+/** Request a stock's split history.
+
+    Params:
+        range = The range for which the split history is desired.
+*/
+Stock splits(Stock stock, SplitRange range) {
+    string[string] params;
+    if (stock.queriesMultipleSymbols()) {
+        params["range"] = range;
+    }
+    stock.addQueryType(EndpointType.Splits, params, "/" ~ range);
+    return stock;
+}
+
+
 private:
 
 bool hasEnumMember(E, T)(T value) if (is(E == enum)) {

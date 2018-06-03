@@ -128,7 +128,8 @@ unittest {
     auto stock = Stock("AAPL", "BDC").dividends(DividendRange.TwoYears);
     auto actual = stock.toURL().split('?');
     assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
-    assert(actual[1].hasParameters(["symbols=AAPL,BDC", "range=2y"]), actual[1]);
+    assert(actual[1].hasParameters(["symbols=AAPL,BDC", "types=dividends", "range=2y"]),
+            actual[1]);
 }
 
 
@@ -338,7 +339,7 @@ unittest {
 }
 
 
-@("ohlc()  builds an endpoint for a single stock symbol")
+@("ohlc() builds an endpoint for a single stock symbol")
 unittest {
     auto stock = Stock("AAPL").ohlc();
     assert(stock.toURL() == iexPrefix ~ "stock/AAPL/ohlc", stock.toURL());
@@ -347,7 +348,7 @@ unittest {
     assert(stock.toURL() == iexPrefix ~ "stock/market/ohlc", stock.toURL());
 }
 
-@("ohlc()  builds an endpoint for multiple symbols")
+@("ohlc() builds an endpoint for multiple symbols")
 unittest {
     import std.string : split;
     auto stock = Stock("AAPL", "BDC").ohlc();
@@ -363,16 +364,13 @@ unittest {
 }
 
 
-@("peers()  builds an endpoint for a single stock symbol")
+@("peers() builds an endpoint for a single stock symbol")
 unittest {
     auto stock = Stock("AAPL").peers();
     assert(stock.toURL() == iexPrefix ~ "stock/AAPL/peers", stock.toURL());
-
-    stock = Stock("market").peers();
-    assert(stock.toURL() == iexPrefix ~ "stock/market/peers", stock.toURL());
 }
 
-@("peers()  builds an endpoint for multiple symbols")
+@("peers() builds an endpoint for multiple symbols")
 unittest {
     import std.string : split;
     auto stock = Stock("AAPL", "BDC").peers();
@@ -382,7 +380,7 @@ unittest {
 }
 
 
-@("previous()  builds an endpoint for a single stock symbol")
+@("previous() builds an endpoint for a single stock symbol")
 unittest {
     auto stock = Stock("AAPL").previous();
     assert(stock.toURL() == iexPrefix ~ "stock/AAPL/previous", stock.toURL());
@@ -391,7 +389,7 @@ unittest {
     assert(stock.toURL() == iexPrefix ~ "stock/market/previous", stock.toURL());
 }
 
-@("ohlc()  builds an endpoint for multiple symbols")
+@("ohlc() builds an endpoint for multiple symbols")
 unittest {
     import std.string : split;
     auto stock = Stock("AAPL", "BDC").previous();
@@ -402,13 +400,13 @@ unittest {
 }
 
 
-@("price()  builds an endpoint for a single stock symbol")
+@("price() builds an endpoint for a single stock symbol")
 unittest {
     auto stock = Stock("AAPL").price();
     assert(stock.toURL() == iexPrefix ~ "stock/AAPL/price", stock.toURL());
 }
 
-@("price()  builds an endpoint for multiple symbols")
+@("price() builds an endpoint for multiple symbols")
 unittest {
     import std.string : split;
     auto stock = Stock("AAPL", "BDC").price();
@@ -441,6 +439,39 @@ unittest {
     auto actual = stock.toURL().split('?');
     assert(actual[0] == iexPrefix ~ "stock/market/batch");
     assert(actual[1].hasParameters(["symbols=AAPL,BDC", "types=quote", "displayPercent=true"]));
+}
+
+
+@("relevant() builds an endpoint for a single stock symbol")
+unittest {
+    auto stock = Stock("AAPL").relevant();
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/relevant", stock.toURL());
+}
+
+@("relevant() builds an endpoint for multiple symbols")
+unittest {
+    import std.string : split;
+    auto stock = Stock("AAPL", "BDC").relevant();
+    auto actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
+    assert(actual[1].hasParameters(["symbols=AAPL,BDC", "types=relevant"]), actual[1]);
+}
+
+
+@("splits() builds an endpoint for a single stock symbol")
+unittest {
+    auto stock = Stock("AAPL").splits(SplitRange.TwoYears);
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/splits/2y", stock.toURL());
+}
+
+@("splits() builds an endpoint for multiple stock symbols")
+unittest {
+    import std.string : split;
+    auto stock = Stock("AAPL", "BDC").splits(SplitRange.TwoYears);
+    auto actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
+    assert(actual[1].hasParameters(["symbols=AAPL,BDC", "range=2y", "types=splits"]),
+            actual[1]);
 }
 
 
