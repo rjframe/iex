@@ -1,5 +1,7 @@
 module unit.iex;
 
+import unit_threaded : HiddenTest;
+
 import iex;
 
 version(unittest) {
@@ -198,6 +200,7 @@ unittest {
             stock.toURL());
 }
 
+@HiddenTest("batches not yet implemented")
 @("thresholdSecurities() builds an endpoint as part of a batch")
 unittest {
     import std.string : split;
@@ -210,6 +213,32 @@ unittest {
     assert(actual[1].hasParameters(
             ["symbols=AAPL,BDC", "types=chart,threshold-securities", "range=ytd"]),
             actual[1]);
+}
+
+
+@("shortInterest() builds an endpoint for a single stock symbol")
+unittest {
+    import std.string : split;
+    auto stock = Stock("AAPL").shortInterest();
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/short-interest/",
+            stock.toURL());
+
+    stock = Stock("AAPL").shortInterest("20180531", ResponseFormat.csv);
+    auto actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/AAPL/short-interest/20180531",
+            actual[0]);
+    assert(actual[1].hasParameters(["format=csv"]), actual[1]);
+}
+
+@("shortInterest() builds an endpoint for the market")
+unittest {
+    auto stock = Stock("").shortInterest();
+    assert(stock.toURL() == iexPrefix ~ "stock/market/short-interest/",
+            stock.toURL());
+
+    stock = Stock("market").shortInterest();
+    assert(stock.toURL() == iexPrefix ~ "stock/market/short-interest/",
+            stock.toURL());
 }
 
 
@@ -238,6 +267,7 @@ unittest {
 }
 
 
+@HiddenTest("news() not yet implemented")
 @("Build multiple-symbol batch endpoints")
 unittest {
     import std.string : split;
@@ -253,7 +283,7 @@ unittest {
             actual[1]);
 }
 
-
+@HiddenTest("waiting until most endpoints are ready to determine desired API")
 @("TODO: Determine desired behavior when chart and dividend have different ranges")
 /+ I don't think I like this, but it's better than allowing inconsistency.
 
@@ -263,5 +293,5 @@ unittest {
                     .sharedParams("1y");
 +/
 unittest {
-    assert(false);
+    assert(false, "not implemented");
 }

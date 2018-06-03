@@ -50,6 +50,9 @@ struct Endpoint {
 */
 // TODO: There is a maximum of 10 endpoints in a query.
 struct Stock {
+
+    @disable this();
+
     this(string[] symbols...) in {
         assert(symbols.length > 0);
     } do {
@@ -363,6 +366,30 @@ Stock thresholdSecurities(
     }
 
     stock.addQueryType(EndpointType.ThresholdSecuritiesList, params, "/" ~ date);
+    return stock;
+}
+
+
+Stock shortInterest(
+        Stock stock,
+        string date = "",
+        ResponseFormat format = ResponseFormat.json,
+        string token = "") {
+    string[string] params;
+    if (token.length > 0) params["token"] = token;
+
+    if (stock.queriesMultipleSymbols() && date.length > 0) {
+        params["date"] = date;
+    } else {
+        if (stock.symbols[0] == "")
+            stock.symbols[0] = "market";
+    }
+
+    if (format != ResponseFormat.json) {
+        params["format"] = format;
+    }
+
+    stock.addQueryType(EndpointType.ShortInterestList, params, "/" ~ date);
     return stock;
 }
 
