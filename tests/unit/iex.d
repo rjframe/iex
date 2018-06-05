@@ -491,10 +491,19 @@ unittest {
 
 @("Build single-symbol batch endpoints")
 unittest {
+    import std.string : split;
     auto stock = Stock("AAPL")
             .company()
             .dividends(DividendRange.FiveYears);
-    assert(false, "TODO");
+
+    // We don't have to use the /market endpoint but can, and it keeps the code
+    // simpler (e.g., we could do /stock/AAPL/batch instead).
+
+    auto actual = stock.toURL.split('?');
+    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
+    assert(actual[1].hasParameters(
+            ["symbols=AAPL", "types=company,dividends", "range=5y"]),
+            actual[1]);
 }
 
 @("Build multiple-symbol batch endpoints")
