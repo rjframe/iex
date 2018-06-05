@@ -43,6 +43,7 @@ enum EndpointType : string {
 struct Endpoint {
     string urlString;
     string[string] params;
+    string[string] options;
 }
 
 /** Specify response formats for endpoints that support alternatives to JSON. */
@@ -69,22 +70,7 @@ struct Stock {
 
     @property
     string toURL(string prefix = iexPrefix) {
-        string queryString;
-
-        if (this.queriesMultipleSymbols() || this.endpoints.length > 1) {
-            queryString = "stock/market/batch?symbols=" ~ symbols[0];
-            for (int i = 1; i < symbols.length; ++i) {
-                queryString ~= "," ~ symbols[i];
-            }
-
-            queryString ~= "&types=";
-            foreach (type, params; this.endpoints) {
-                 queryString ~= type ~ ",";
-            }
-            queryString = queryString[0..$-1];
-        } else {
-            queryString = "stock/" ~ symbols[0] ~ "/";
-        }
+        string queryString = getSymbolURL(prefix);
 
         if (this.endpoints.length == 1) {
             queryString ~= buildEndpoint(
@@ -96,6 +82,9 @@ struct Stock {
                 foreach (key, val; endpoint.params) {
                     queryString ~= "&" ~ key ~ "=" ~ val;
                 }
+                foreach (key, val; endpoint.options) {
+                    queryString ~= "&" ~ key ~ "=" ~ val;
+                }
             }
         }
 
@@ -103,6 +92,33 @@ struct Stock {
     }
 
     private:
+
+
+    auto getSymbolURL(string prefix) {
+        if (this.queriesMultipleSymbols() || this.endpoints.length > 1) {
+            string queryString = "stock/market/batch?symbols=" ~ symbols[0];
+            for (int i = 1; i < symbols.length; ++i) {
+                queryString ~= "," ~ symbols[i];
+            }
+
+            queryString ~= "&types=";
+            foreach (type, params; this.endpoints) {
+                 queryString ~= type ~ ",";
+            }
+            foreach (endpoint; this.endpoints) {
+                if (endpoint.options.length > 0) {
+                    queryString = queryString[0..$-1];
+                    queryString ~= "&";
+                    foreach (option, value; endpoint.options) {
+                        queryString ~= option ~ "=" ~ value ~ "&";
+                    }
+                }
+            }
+            return queryString[0..$-1];
+        } else {
+            return "stock/" ~ symbols[0] ~ "/";
+        }
+    }
 
     /** Add a query type to the Stock HTTP query.
 
@@ -114,10 +130,12 @@ struct Stock {
     void addQueryType(
             EndpointType type,
             string[string] params = null,
+            string[string] options = null,
             string urlAddition = "") {
         Endpoint p = {
             urlString: type ~ urlAddition,
-            params: params
+            params: params,
+            options: options
         };
         this.endpoints[type] = p;
     }
@@ -128,11 +146,32 @@ struct Stock {
             bool isContinuing = false) {
 
         if (endpoint.params.length == 0) {
-            return isContinuing ? "" : endpoint.urlString;
+            if (isContinuing) return "";
+
+            string endpointString = endpoint.urlString;
+            foreach (option, value; endpoint.options) {
+                endpointString ~= "/" ~ value;
+            }
+            return endpointString;
         } else {
-            string endpointString = isContinuing ? "&" : endpoint.urlString ~ "?";
+            string endpointString;
+            if (! isContinuing) {
+                endpointString = endpoint.urlString;
+                foreach (option, value; endpoint.options) {
+                    endpointString ~= "/" ~ value;
+                }
+                endpointString ~= "?";
+            } else {
+                endpointString = "&";
+            }
+
             foreach (param, value; endpoint.params) {
                 endpointString ~= param ~ "=" ~ value ~ "&";
+            }
+            if (isContinuing) {
+                foreach (option, value; endpoint.options) {
+                    endpointString ~= option ~ "=" ~ value ~ "&";
+                }
             }
             return endpointString[0..$-1];
         }
@@ -245,6 +284,7 @@ Stock chart(
     // or the other.
 
     string[string] params;
+    string[string] options;
 
     if (resetAtMidnight) params["chartReset"] = "true";
     if (simplify) params["chartSimplify"] = "true";
@@ -252,14 +292,12 @@ Stock chart(
     if (changeFromClose) params["changeFromClose"] = "true";
     if (last > 0) params["chartLast"] = last.text;
 
-    if (stock.queriesMultipleSymbols()) {
-        params["range"] = range;
-    }
+    options["range"] = range;
 
     if (range.isNumeric && range.length == 8)
-        stock.addQueryType(EndpointType.Chart, params, "/date/" ~ range);
+        stock.addQueryType(EndpointType.Chart, params, options, "/date");
     else if (hasEnumMember!ChartRange(range))
-        stock.addQueryType(EndpointType.Chart, params, "/" ~ range);
+        stock.addQueryType(EndpointType.Chart, params, options);
     else
         throw new Exception("Invalid range for chart: " ~ range);
 
@@ -324,11 +362,9 @@ enum DividendRange : string {
         range = The range for which the list of distributions is desired.
 */
 Stock dividends(Stock stock, DividendRange range) {
-    string[string] params;
-    if (stock.queriesMultipleSymbols()) {
-        params["range"] = range;
-    }
-    stock.addQueryType(EndpointType.Dividends, params, "/" ~ range);
+    string[string] options;
+    options["range"] = range;
+    stock.addQueryType(EndpointType.Dividends, null, options);
     return stock;
 }
 
@@ -374,11 +410,12 @@ Stock thresholdSecurities(
         ResponseFormat format = ResponseFormat.json,
         string token = "") {
     string[string] params;
+    string[string] options;
+
+    options["range"] = date;
     if (token.length > 0) params["token"] = token;
 
-    if (stock.queriesMultipleSymbols()) {
-        if (date.length > 0) params["date"] = date;
-    } else {
+    if (stock.symbols[0] == "") {
         stock.symbols[0] = "market";
     }
 
@@ -386,7 +423,7 @@ Stock thresholdSecurities(
         params["format"] = format;
     }
 
-    stock.addQueryType(EndpointType.ThresholdSecuritiesList, params, "/" ~ date);
+    stock.addQueryType(EndpointType.ThresholdSecuritiesList, params, options);
     return stock;
 }
 
@@ -397,20 +434,17 @@ Stock shortInterest(
         ResponseFormat format = ResponseFormat.json,
         string token = "") {
     string[string] params;
-    if (token.length > 0) params["token"] = token;
+    string[string] options;
 
-    if (stock.queriesMultipleSymbols() && date.length > 0) {
-        params["date"] = date;
-    } else {
-        if (stock.symbols[0] == "")
-            stock.symbols[0] = "market";
-    }
+    if (stock.symbols[0] == "") stock.symbols[0] = "market";
+    if (token.length > 0) params["token"] = token;
+    options["range"] = date;
 
     if (format != ResponseFormat.json) {
         params["format"] = format;
     }
 
-    stock.addQueryType(EndpointType.ShortInterestList, params, "/" ~ date);
+    stock.addQueryType(EndpointType.ShortInterestList, params, options);
     return stock;
 }
 
@@ -442,14 +476,13 @@ Stock list(
         MarketList list,
         Flag!"displayPercent" displayPercent = No.displayPercent) {
     string[string] params;
-    if (stock.queriesMultipleSymbols())
-        params["list"] = list;
-    else
-        stock.symbols[0] = "market";
+    string[string] options;
 
+    stock.symbols[0] = "market";
+    options["list"] = list;
     if (displayPercent) params["displayPercent"] = "true";
 
-    stock.addQueryType(EndpointType.List, params, "/" ~ list);
+    stock.addQueryType(EndpointType.List, params, options);
     return stock;
 }
 
@@ -477,7 +510,7 @@ Stock news(Stock stock, int last = 10) in {
         params["last"] = last.text;
 
     if (last != 10)
-        stock.addQueryType(EndpointType.News, params, "/last/" ~ last.text);
+        stock.addQueryType(EndpointType.News, params, null, "/last/" ~ last.text);
     else
         stock.addQueryType(EndpointType.News, params);
 
@@ -551,11 +584,9 @@ alias SplitRange = DividendRange;
         range = The range for which the split history is desired.
 */
 Stock splits(Stock stock, SplitRange range) {
-    string[string] params;
-    if (stock.queriesMultipleSymbols()) {
-        params["range"] = range;
-    }
-    stock.addQueryType(EndpointType.Splits, params, "/" ~ range);
+    string[string] options;
+    options["range"] = range;
+    stock.addQueryType(EndpointType.Splits, null, options);
     return stock;
 }
 

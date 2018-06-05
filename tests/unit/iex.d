@@ -190,21 +190,13 @@ unittest {
 @("thresholdSecurities() builds an endpoint for a single stock symbol")
 unittest {
     import std.string : split;
-    auto stock = Stock("market").thresholdSecurities();
-    assert(stock.toURL() == iexPrefix ~ "stock/market/threshold-securities/",
+    auto stock = Stock("AAPL").thresholdSecurities();
+    assert(stock.toURL() == iexPrefix ~ "stock/AAPL/threshold-securities/",
             stock.toURL());
 
     stock = Stock("market").thresholdSecurities("20180531");
     assert(stock.toURL() ==
             iexPrefix ~ "stock/market/threshold-securities/" ~ "20180531",
-            stock.toURL());
-}
-
-@("thresholdSecurities() ignores specific stock symbols passed to it")
-unittest {
-    import std.string : split;
-    auto stock = Stock("AAPL").thresholdSecurities();
-    assert(stock.toURL() == iexPrefix ~ "stock/market/threshold-securities/",
             stock.toURL());
 }
 
@@ -496,6 +488,14 @@ unittest {
             stock.toURL());
 }
 
+
+@("Build single-symbol batch endpoints")
+unittest {
+    auto stock = Stock("AAPL")
+            .company()
+            .dividends(DividendRange.FiveYears);
+    assert(false, "TODO");
+}
 
 @("Build multiple-symbol batch endpoints")
 unittest {
