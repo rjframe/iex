@@ -1,6 +1,6 @@
 module unit.iex;
 
-import unit_threaded : HiddenTest;
+import unit_threaded : HiddenTest, writelnUt;
 
 import iex;
 
@@ -521,15 +521,22 @@ unittest {
             actual[1]);
 }
 
-@HiddenTest("waiting until most endpoints are ready to determine desired API")
-@("TODO: Determine desired behavior when chart and dividend have different ranges")
-/+ I don't think I like this, but it's better than allowing inconsistency.
+@("Only use the last-specified value of shared parameters.")
+/+ TODO: I don't think I like this, but it's better than allowing inconsistency.
 
     auto stock = Stock("AAPL")
                 .chart()
                 .dividends()
-                    .sharedParams("1y");
+                    .range("1y");
 +/
 unittest {
-    assert(false, "not implemented");
+    import std.string : split;
+    auto stock = Stock("AAPL")
+                .chart(ChartRange.TwoYears)
+                .dividends(DividendRange.OneYear);
+
+    auto actual = stock.toURL().split('?');
+    assert(actual[0] == iexPrefix ~ "stock/market/batch", actual[0]);
+    assert(actual[1].hasParameters(["types=dividends,chart", "range=1y"]),
+            actual[1]);
 }

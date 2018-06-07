@@ -58,6 +58,7 @@ enum ResponseFormat : string {
     The string created by calling toURL() is an IEX API-compatible URL.
 */
 // TODO: There is a maximum of 10 endpoints in a query.
+// TODO: Clean up the URL generation code.
 struct Stock {
 
     @disable this();
@@ -78,16 +79,22 @@ struct Stock {
                     this.endpoints[this.endpoints.keys()[0]],
                     this.queriesMultipleSymbols());
         } else {
+            // options are shared among endpoints. We only want to enter them
+            // once - duplicates are ignored, even if values differ.
+            bool[string] optionsFinished;
+
             foreach (type, endpoint; this.endpoints) {
                 foreach (key, val; endpoint.params) {
                     queryString ~= "&" ~ key ~ "=" ~ val;
                 }
                 foreach (key, val; endpoint.options) {
-                    queryString ~= "&" ~ key ~ "=" ~ val;
+                    if (key !in optionsFinished && val != "") {
+                        queryString ~= "&" ~ key ~ "=" ~ val;
+                        optionsFinished[key] = true;
+                    }
                 }
             }
         }
-
         return prefix ~ queryString;
     }
 
@@ -103,16 +110,7 @@ struct Stock {
 
             queryString ~= "&types=";
             foreach (type, params; this.endpoints) {
-                 queryString ~= type ~ ",";
-            }
-            foreach (endpoint; this.endpoints) {
-                if (endpoint.options.length > 0) {
-                    queryString = queryString[0..$-1];
-                    queryString ~= "&";
-                    foreach (option, value; endpoint.options) {
-                        queryString ~= option ~ "=" ~ value ~ "&";
-                    }
-                }
+                queryString ~= type ~ ",";
             }
             return queryString[0..$-1];
         } else {
@@ -146,9 +144,15 @@ struct Stock {
             bool isContinuing = false) {
 
         if (endpoint.params.length == 0) {
-            if (isContinuing) return "";
-
+            if (isContinuing) {
+                string endpointString;
+                foreach (option, value; endpoint.options) {
+                    endpointString ~= "&" ~ option ~ "=" ~ value;
+                }
+                return endpointString;
+            }
             string endpointString = endpoint.urlString;
+
             foreach (option, value; endpoint.options) {
                 endpointString ~= "/" ~ value;
             }
