@@ -11,6 +11,7 @@ import vibe.data.json;
 
 enum iexPrefix = "https://api.iextrading.com/1.0/";
 
+/** List of supported stock endpoints. */
 enum EndpointType : string {
     Book = "book",
     Chart = "chart",
@@ -69,6 +70,7 @@ struct Stock {
         this.symbols = symbols;
     }
 
+    /** Build an IEX API URL from this Stock object. */
     @property
     string toURL(string prefix = iexPrefix) {
         string queryString = getSymbolURL(prefix);
@@ -97,6 +99,7 @@ struct Stock {
         }
         return prefix ~ queryString;
     }
+
 
     private:
 
@@ -188,17 +191,19 @@ struct Stock {
     Endpoint[EndpointType] endpoints;
 }
 
-/** Send a Query object to the IEX API and return the JSON results. */
+
+/** Send a Stock object to the IEX API and return the JSON results. */
 Json query(Stock query) {
     import std.conv : to;
     import requests : getContent;
     return getContent(query.toURL()).to!string().parseJsonString();
 }
 
+
 /** Make an arbitrary call to the IEX API.
 
     This is here to allow retrieving data from currently-unsupported endpoints.
-    This function is not permanent.
+    This function is not (may not be) permanent.
 */
 Json query(string query, string prefix = iexPrefix) {
     import std.conv : to;
@@ -206,12 +211,14 @@ Json query(string query, string prefix = iexPrefix) {
     return getContent(prefix ~ query).to!string().parseJsonString();
 }
 
+
 /// ditto
 Json query(string query, string[string] params, string prefix = iexPrefix) {
     import std.conv : to;
     import requests : getContent;
     return getContent(prefix ~ query, params).to!string().parseJsonString();
 }
+
 
 /+ TODO: I'd like to do this but can't generate docs for it.
     https://issues.dlang.org/show_bug.cgi?id=2420
@@ -261,6 +268,7 @@ enum ChartRange : string {
 /** Request historical prices for a stock.
 
     Params:
+        stock =             The Stock object to modify.
         range =             The date range for which to retrieve prices. A custom
                             date may be passed in the format "YYYYMMDD" within
                             the last thirty days.
@@ -348,6 +356,7 @@ Stock delayedQuote(Stock stock) {
     return stock;
 }
 
+
 /** Values for the date range in a dividend query. */
 enum DividendRange : string {
     FiveYears = "5y",
@@ -400,13 +409,15 @@ Stock financials(Stock stock) {
     return stock;
 }
 
-/** Request threshold securities.
+/** Request threshold securities for IEX-listed stocks.
 
     Params:
-        date =  List data for the specified date in YYYYMMDD format, or "sample"
-                for sample data.
-        token = Your IEX account token; if not specified, the CUSIP field will
-                be excluded from the results.
+        stock =     The stock object to modify.
+        date =      List data for the specified date in YYYYMMDD format, or
+                    "sample" for sample data.
+        format =    json, csv, or psv.
+        token =     Your IEX account token; if not specified, the CUSIP field
+                    will be excluded from the results.
 */
 Stock thresholdSecurities(
         Stock stock,
@@ -432,6 +443,7 @@ Stock thresholdSecurities(
 }
 
 
+/** The IEX-listed short interest list. */
 Stock shortInterest(
         Stock stock,
         string date = "",
@@ -467,6 +479,7 @@ Stock largestTrades(Stock stock) {
 }
 
 
+/** Filter for top ten lists. */
 enum MarketList : string {
     MostActive = "mostactive",
     Gainers = "gainers",
@@ -475,6 +488,13 @@ enum MarketList : string {
     percent = "iexpercent"
 }
 
+/** Get a list of top ten stocks according to a filter.
+
+    Params:
+        stock =             The Stock object to modify.
+        list =              The desired list.
+        displayPercent =    If true, percentage values are multiplied by 100.
+*/
 Stock list(
         Stock stock,
         MarketList list,
@@ -501,6 +521,7 @@ Stock logo(Stock stock) {
 /** Retrieve news about the specified stocks or the market.
 
     Params:
+        stock = The Stock object to modify.
         last =  The number of news results to return, between 1 and 50 inclusive.
                 The default is 10.
 */
@@ -585,6 +606,7 @@ alias SplitRange = DividendRange;
 /** Request a stock's split history.
 
     Params:
+        stock = The Stock object to modify.
         range = The range for which the split history is desired.
 */
 Stock splits(Stock stock, SplitRange range) {
